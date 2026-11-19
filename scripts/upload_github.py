@@ -113,28 +113,8 @@ def main() -> int:
     _, ver = run([git, "--version"])
     print(f"  ✓ {ver.strip()}   ({git})")
 
-    # ---------- 2. 提交者身份 ----------
-    step(2, 6, "配置提交者身份（写进每次提交记录里）")
-    _, name = run([git, "config", "user.name"], check=False)
-    _, email = run([git, "config", "user.email"], check=False)
-    if not name.strip():
-        name = ask("你的名字（建议用 GitHub 用户名）")
-        run([git, "config", "user.name", name])
-        print(f"  ✓ 已设置为 {name}")
-    else:
-        print(f"  ✓ 姓名：{name.strip()}")
-    if not email.strip():
-        email = ask("你的邮箱（GitHub 注册邮箱）")
-        run([git, "config", "user.email", email])
-        print(f"  ✓ 已设置为 {email}")
-    else:
-        print(f"  ✓ 邮箱：{email.strip()}")
-
-    # 中文文件名不转义，日志里能直接看懂
-    run([git, "config", "core.quotepath", "false"], check=False)
-
-    # ---------- 3. 初始化 ----------
-    step(3, 6, "初始化仓库")
+    # ---------- 2. 初始化仓库（必须先于 config，否则 git config 会报 not in a git directory）----------
+    step(2, 6, "初始化仓库")
     if (ROOT / ".git").exists():
         print("  ✓ 已经是 git 仓库，跳过 git init")
     else:
@@ -144,6 +124,27 @@ def main() -> int:
             run([git, "checkout", "-b", "main"], check=False)
         print("  ✓ 已初始化，分支 main")
 
+    # ---------- 3. 提交者身份 ----------
+    step(3, 6, "配置提交者身份（写进每次提交记录里）")
+    _, name = run([git, "config", "user.name"], check=False)
+    _, email = run([git, "config", "user.email"], check=False)
+    if not name.strip():
+        name = ask("你的名字（建议用 GitHub 用户名）")
+        rc, err = run([git, "config", "user.name", name], check=False)
+        print(f"  ✓ 已设置为 {name}" if rc == 0 else f"  ! 设置失败：{err.strip()[:120]}")
+    else:
+        print(f"  ✓ 姓名：{name.strip()}")
+    if not email.strip():
+        email = ask("你的邮箱（GitHub 注册邮箱）")
+        rc, err = run([git, "config", "user.email", email], check=False)
+        print(f"  ✓ 已设置为 {email}" if rc == 0 else f"  ! 设置失败：{err.strip()[:120]}")
+    else:
+        print(f"  ✓ 邮箱：{email.strip()}")
+
+    # 中文文件名不转义，日志里能直接看懂
+    run([git, "config", "core.quotepath", "false"], check=False)
+
+    # ---------- 3. 初始化 ----------
     # ---------- 4. 安全检查 + 暂存 ----------
     step(4, 6, "检查要上传的文件（挡住大数据集和权重）")
     run([git, "add", "-A"])
@@ -180,7 +181,12 @@ def main() -> int:
     elif "nothing to commit" in out or "无文件要提交" in out:
         print("  ✓ 没有新改动，跳过")
     else:
-        print("  ! 提交失败，输出如上")
+        print("  ✗ 提交失败，原始输出：")
+        print("  " + (out.strip()[:800] or "(无输出)"))
+        print("\n  最常见原因：没配置提交者身份。执行下面两行后重来：")
+        print('      git config user.name "你的名字"')
+        print('      git config user.email "你的邮箱"')
+        return 1
 
     # ---------- 6. 关联远程并推送 ----------
     if args.no_push:
@@ -221,11 +227,28 @@ def main() -> int:
         line("═")
         return 0
 
-    print("  ✗ 推送失败。常见原因：")
-    print("    · 认证失败 → 密码要填 Personal Access Token（GitHub Settings → Developer settings → Tokens）")
-    print("    · 远端已有内容 → 先执行 git pull --rebase origin main 再推")
-    print("    · 网络超时 → 重试一次，或设置代理")
-    print("\n  完整报错见上方。也可以改用 GitHub Desktop 上传（见 docs/05）")
+    print("  ✗ 推送失败。原始输出：")
+    print("  " + (out.strip()[:900] or "(无输出)"))
+
+    low = (out or "").lower()
+    print("\n  按报错判断原因：")
+    if "connection was reset" in low or "recv failure" in low or "timed out" in low:
+        print("    → 【网络被重置】GitHub 在国内经常连不上，这不是你配置错了。三种办法：")
+        print("      ① 有代理（Clash/V2Ray）就设一下再推：")
+        print("         git config --global http.proxy http://127.0.0.1:7890")
+        print("         git push -u origin main")
+        print("      ② 没代理：先推到 Gitee（国内秒传），再用 GitHub 的 Import repository 导入")
+        print("         见 docs/05_第一次上传GitHub.md 的「网络不通怎么办」")
+        print("      ③ 换个网络（手机热点）重试一次")
+    elif "authentication" in low or "403" in low or "could not read username" in low:
+        print("    → 【认证失败】密码位置要填 Personal Access Token：")
+        print("      https://github.com/settings/tokens → Generate new token (classic) → 勾 repo")
+    elif "rejected" in low or "non-fast-forward" in low:
+        print("    → 【远端已有提交】先合并再推：")
+        print("      git pull --rebase origin main")
+        print("      git push -u origin main")
+    else:
+        print("    → 把上面原始输出整段发给懂行的人；或改用 GitHub Desktop（见 docs/05）")
     return 1
 
 
