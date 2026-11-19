@@ -158,7 +158,7 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--remote", default=None)
     ap.add_argument("--force", action="store_true")
-    ap.add_argument("--retries", type=int, default=3)
+    ap.add_argument("--retries", type=int, default=1, help="HTTPS 重试次数，默认 1（失败就转 SSH）")
     ap.add_argument("--https", action="store_true", help="只走 HTTPS")
     ap.add_argument("--ssh", action="store_true", help="只走 SSH")
     args = ap.parse_args()
