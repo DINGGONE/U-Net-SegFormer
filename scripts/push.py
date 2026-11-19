@@ -186,6 +186,7 @@ def main() -> int:
     url = url.strip()
     print(f"  远端：{url}")
 
+    # 先提交本地改动，再同步远端（pull --rebase 要求工作区干净）
     git("add", "-A")
     rc, out = git("commit", "-m", "update: 同步本地改动")
     if rc == 0:
@@ -196,6 +197,24 @@ def main() -> int:
         print("  [!] 提交失败：" + out[:300])
         print('      先设置：git config user.name "名字" / user.email "邮箱"')
         return 1
+
+    # 同步远端（网页上直接改过文件时，本地会落后；不同步推送会被拒绝）
+    print("\n  同步远端 ...")
+    rc, out = git("fetch", "--quiet", "origin", timeout=300)
+    if rc == 0:
+        rc2, cnt = git("rev-list", "--count", "HEAD..origin/main", timeout=60)
+        behind = int(cnt) if rc2 == 0 and cnt.strip().isdigit() else 0
+        if behind:
+            print(f"  远端领先 {behind} 个提交，先拉取 ...")
+            rc3, out3 = git("pull", "--rebase", "origin", "main", timeout=300)
+            print("    " + (out3.splitlines()[-1] if out3 else ""))
+            if rc3 != 0:
+                print("  [!] 拉取失败（可能有冲突），先手动处理：git pull --rebase origin main")
+                return 1
+        else:
+            print("  已是最新")
+    else:
+        print("  跳过（网络不通）")
 
     ok = False
     if not args.ssh:

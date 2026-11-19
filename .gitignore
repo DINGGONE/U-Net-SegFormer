@@ -45,3 +45,7 @@ outputs/
 .DS_Store
 Thumbs.db
 *.log
+
+# 本地上传辅助脚本，不入库
+一键上传.bat
+一键上传.bat.utf8
