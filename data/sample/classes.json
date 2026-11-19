@@ -1,0 +1,80 @@
+{
+  "num_classes": 6,
+  "ignore_index": 255,
+  "classes": [
+    {
+      "id": 0,
+      "name": "背景/其他",
+      "name_en": "background",
+      "color": [
+        110,
+        110,
+        110
+      ],
+      "carto_name": "其他"
+    },
+    {
+      "id": 1,
+      "name": "建筑",
+      "name_en": "building",
+      "color": [
+        214,
+        62,
+        62
+      ],
+      "carto_name": "建筑用地"
+    },
+    {
+      "id": 2,
+      "name": "道路",
+      "name_en": "road",
+      "color": [
+        246,
+        196,
+        63
+      ],
+      "carto_name": "道路交通"
+    },
+    {
+      "id": 3,
+      "name": "水体",
+      "name_en": "water",
+      "color": [
+        46,
+        108,
+        208
+      ],
+      "carto_name": "水域"
+    },
+    {
+      "id": 4,
+      "name": "植被",
+      "name_en": "vegetation",
+      "color": [
+        58,
+        158,
+        84
+      ],
+      "carto_name": "植被覆盖"
+    },
+    {
+      "id": 5,
+      "name": "裸土",
+      "name_en": "bare_soil",
+      "color": [
+        186,
+        146,
+        106
+      ],
+      "carto_name": "裸土/在建"
+    }
+  ],
+  "synthetic": true,
+  "note": "合成数据，仅用于打通流程，不得作为实验结果。",
+  "tiles": 11,
+  "scene_shape": [
+    2048,
+    3072,
+    3
+  ]
+}

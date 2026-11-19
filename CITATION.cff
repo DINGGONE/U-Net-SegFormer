@@ -1,0 +1,23 @@
+cff-version: 1.2.0
+message: "如果这个项目对你有帮助，欢迎引用。"
+title: "高分遥感地物分类：从 U-Net 到土地利用智能解译图"
+abstract: >-
+  面向高分遥感影像的像素级 6 类地物分类（建筑/道路/水体/植被/裸土/其他）完整流水线，
+  覆盖影像裁剪、数据增强、U-Net / SegFormer 训练、mIoU/F1 评估、滑窗推理、
+  后处理与制图，输出保留坐标系的 GeoTIFF、矢量图斑与土地利用解译成果图。
+authors:
+  - family-names: "你的姓"
+    given-names: "你的名"
+    orcid: "https://orcid.org/0000-0000-0000-0000"   # 可选，没有就删掉这一行
+version: 0.1.0
+date-released: "2026-11-19"
+license: MIT
+repository-code: "https://github.com/<你的用户名>/<仓库名>"
+keywords:
+  - remote sensing
+  - semantic segmentation
+  - land cover
+  - U-Net
+  - SegFormer
+  - PyTorch
+  - GIS

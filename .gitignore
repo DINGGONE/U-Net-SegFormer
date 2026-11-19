@@ -1,0 +1,53 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+
+# ---- 大文件：绝对不要提交 ----
+# 数据集
+data/loveda/
+data/loveda_small/
+data/vaihingen/
+data/potsdam/
+data/spacenet/
+data/raw/
+data/infer_tiles/
+*.zip
+
+# 训练产出
+runs/
+*.pt
+*.pth
+*.onnx
+*.ckpt
+
+# 本地 wheel / 预训练权重缓存 / 便携工具
+wheels/
+.torch/
+.tools/
+
+# 地理栅格（成果图太大，只在 docs/images 放压缩版）
+*.tif
+*.tiff
+*.ovr
+*.aux.xml
+*.tfw
+
+# 输出目录：只保留 README / 文档里引用的几张演示图
+outputs/*
+!outputs/demo_comparison.png
+!outputs/demo_confusion.png
+!outputs/demo_landcover_map.png
+!outputs/demo_landcover_map.pdf
+!outputs/metrics_baseline.json
+!outputs/sample_inspect.png
+
+# 编辑器 / 系统
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+*.log

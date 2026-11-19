@@ -1,0 +1,40 @@
+﻿# 实验 A2：LoveDA + SegFormer-B2 —— 与 U-Net 对照，回答"Transformer 值不值"
+# 注意：SegFormer 在 512 crop 下显存占用比 resnet34 U-Net 高约 40%，
+#       6GB 卡上若 OOM，先把 batch 降到 2、grad_accum 提到 4（等效 batch 不变）。
+exp_name: loveda_segformer_b2
+seed: 42
+num_classes: 6
+
+data:
+  preset: loveda
+  crop_size: 512
+  batch_size: 2
+  num_workers: 6
+  in_channels: 3
+  balance_sampler: false
+  val_stride: 256         # 验证滑窗步长（256=50% 重叠，最准也最慢；显存/时间紧可设 512）
+  val_max_images: 150    # 每 epoch 只验证 150 幅（全量验证太慢，最终评估再跑全量）
+
+model:
+  arch: segformer
+  encoder: mit_b2         # nvidia/mit-b0..b5；b2 ≈ 25M 参数，速度/精度平衡
+  encoder_weights: imagenet
+  pretrained: true
+
+train:
+  epochs: 40
+  lr: 6.0e-5              # Transformer 用小学习率 + 长 warmup
+  weight_decay: 1.0e-2    # SegFormer 官方推荐 0.01
+  backbone_lr_scale: 1.0  # 主干已是预训练，不再额外降
+  grad_accum: 4
+  amp: true
+  grad_clip: 1.0
+  warmup_epochs: 2
+  poly_power: 1.0
+  early_stop_patience: 12
+  class_weight: true
+  loss:
+    name: ce_dice
+    ce_weight: 1.0
+    dice_weight: 1.0
+    label_smoothing: 0.05

@@ -1,0 +1,39 @@
+﻿# 实验 A1：LoveDA + U-Net(ResNet34) —— 主基线，先跑通再谈涨点
+# 目标：在 1~2 小时内拿到一个可信的 mIoU，作为后面所有实验的参照
+exp_name: loveda_unet_r34
+seed: 42
+num_classes: 6
+
+data:
+  preset: loveda          # 标签映射：LoveDA 0..6 → 本项目 0..5 + 255
+  crop_size: 512
+  batch_size: 8           # RTX 2060 6GB 实测：512/bs8/AMP 峰值 2.2 GB，很宽裕
+  num_workers: 6          # Windows 上 dataloader 多进程易出问题，卡住就设 0
+  in_channels: 3
+  balance_sampler: false
+  val_stride: 256         # 验证滑窗步长（256=50% 重叠，最准也最慢；显存/时间紧可设 512）
+  val_max_images: 150    # 每 epoch 只验证 150 幅（全量验证太慢，最终评估再跑全量）
+
+model:
+  arch: unet              # unet / unetpp / deeplabv3plus / segformer
+  encoder: resnet34
+  encoder_weights: imagenet
+  pretrained: true
+
+train:
+  epochs: 40
+  lr: 6.0e-4
+  weight_decay: 1.0e-4
+  backbone_lr_scale: 0.1  # 主干只给 1/10 学习率，防止把小数据打崩
+  grad_accum: 1           # 等效 batch 8（bs8×1，比 bs4×2 少一次累积，更快）
+  amp: true
+  grad_clip: 1.0
+  warmup_epochs: 1
+  poly_power: 0.9
+  early_stop_patience: 12
+  class_weight: true
+  loss:
+    name: ce_dice         # ce / dice / ce_dice / focal_dice
+    ce_weight: 1.0
+    dice_weight: 1.0
+    label_smoothing: 0.0
