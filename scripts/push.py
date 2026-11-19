@@ -120,6 +120,10 @@ def main() -> int:
     elif "rejected" in low or "non-fast-forward" in low:
         print("  → 远端已有网页提交，和本地历史不一致。用强制推送覆盖：")
         print("       python scripts/push.py --force")
+    elif "could not read username" in low or "terminal prompts disabled" in low or "prompt script" in low:
+        print("  → 需要登录授权，但当前窗口弹不出登录框。")
+        print("     · 请直接双击根目录的 一键上传.bat（在你自己电脑的窗口里跑，才能弹出浏览器登录）")
+        print("     · 或者先配好令牌：git config --global credential.helper manager")
     elif "authentication" in low or "403" in low:
         print("  → 认证失败：密码处要填 Personal Access Token（Settings > Developer settings > Tokens，勾 repo）")
     else:
