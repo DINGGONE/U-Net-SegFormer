@@ -1,20 +1,7 @@
-"""无标注影像的应急方案：K-means 非监督分类（ISODATA 的现代版）。
+"""K-means unsupervised classification for unlabelled imagery.
 
-适用场景：手上只有影像、没有标注、也还没有训练好的模型。
-它不"认识"地物，只是把颜色/纹理相近的像素聚成 k 类，再按光谱经验给每类贴标签。
-精度远不如深度学习（目视可用，不能当成果精度），但**10 秒就能出一张合理的图**，
-而且能立刻暴露"这张影像到底好不好分"。
-
-    python scripts/unsupervised_baseline.py --src data/raw/实验影像.tif --gsd 0.5
-    python scripts/unsupervised_baseline.py --src xxx.tif --k 10 --downsample 4
-
-输出::
-
-    outputs/unsupervised/xxx_clusters.json    每个簇的光谱统计（可核查）
-    outputs/unsupervised/xxx_landcover.tif    类别栅格（保留 CRS）
-    outputs/unsupervised/xxx_landcover.png    彩色分类图
-    outputs/unsupervised/xxx_poster.png       成果图
-"""
+Usage:
+    python scripts/unsupervised_baseline.py --src data/raw/image.tif --gsd 0.5"""
 from __future__ import annotations
 
 import argparse

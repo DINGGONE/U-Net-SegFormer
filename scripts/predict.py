@@ -1,13 +1,7 @@
-"""推理入口：整幅影像 → 分类图（+ 可选成果图）。
+"""Predict a full image and export GeoTIFF / PNG / map poster.
 
-    # GeoTIFF（保留坐标系，可拖进 QGIS）
-    python scripts/predict.py --ckpt runs/loveda_unet_r34/best.pt ^
-        --src data/raw/vaihingen_area15.tif --out-dir outputs/vaihingen
-
-    # 普通 PNG/JPEG（无地理信息，只出彩色图和成果图）
-    python scripts/predict.py --ckpt runs/x/best.pt --src data/sample/scene/scene_rgb.png ^
-        --out-dir outputs/demo --gsd 0.3 --poster
-"""
+Usage:
+    python scripts/predict.py --ckpt runs/x/best.pt --src data/raw/a.tif --out-dir outputs/a --poster"""
 from __future__ import annotations
 
 import argparse

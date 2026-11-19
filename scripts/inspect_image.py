@@ -1,18 +1,7 @@
-"""体检脚本：把任意一幅影像丢进来，告诉你"能不能直接进本项目、要改什么"。
+"""Check whether an image is compatible with the pipeline.
 
-    python scripts/inspect_image.py --src D:\data\我的影像.tif
-    python scripts/inspect_image.py --src data\sample\scene\scene_rgb.png
-
-会检查 8 件事：
-    1. 能不能读（格式 / 是否损坏）
-    2. 尺寸、波段数（模型要 3 波段）
-    3. 数据类型、值域（16bit 必须拉伸，否则全黑）
-    4. 坐标系 / 地面分辨率 GSD（决定比例尺和面积算得对不对）
-    5. 和训练数据的 GSD 差多少（差距大要重新训练，不能硬套）
-    6. 有没有旋转（transform 带 b 项要重投影）
-    7. 瓦片数估算 & 推理耗时
-    8. 结论：能直接推理 / 要先做什么
-"""
+Usage:
+    python scripts/inspect_image.py --src data/raw/image.tif"""
 from __future__ import annotations
 
 import argparse

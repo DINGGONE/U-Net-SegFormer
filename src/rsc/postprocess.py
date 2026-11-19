@@ -1,13 +1,4 @@
-"""预测后处理：去碎斑、平滑边界、栅格转矢量、面积统计。
-
-工程经验：分割网络输出的最大问题不是"整体错"，而是：
-  * 建筑屋顶上零星几个"水体"像素（碎斑）→ 人工修图会骂人；
-  * 道路边缘锯齿 → 叠加到影像上很难看；
-  * 小图斑面积 < 最小制图单元（如 4 mm² @ 1:10000）→ 按制图规范必须合并。
-
-所以后处理不是可选项，是交付前的必做步骤。这里的实现尽量零重依赖：
-有 OpenCV 用 OpenCV，没有就用纯 numpy 退化实现，保证任何环境都能跑。
-"""
+"""Post-processing: morphology, small objects, vectorizing, area statistics."""
 from __future__ import annotations
 
 from typing import Dict, List, Optional, Tuple
@@ -239,18 +230,15 @@ def fix_building_fields(
     rb_thresh: float = 15.0,
     bright_thresh: float = 118.0,
 ) -> Tuple[np.ndarray, int]:
-    """跨域推理时的高频错误：**收获后的农田被大量判成建筑**。
+    """Reassign "building" pixels that are actually bare farmland.
 
-    成因：农田在影像上是"大片、平滑、土黄、中高亮度"，与训练集里的大屋顶/工业厂房
-    在低分辨率下非常像；而建筑在真实村庄里是"小、有纹理、颜色杂"。
+    Cross-domain inference tends to label large, smooth, tan-coloured fields as
+    buildings. Among pixels currently predicted as building, those with
+    ``R - B > rb_thresh`` and brightness above ``bright_thresh`` are set to
+    bare soil (5). Thresholds are tuned on 0.5 m aerial imagery
+    (fields: R-B ~ 21, brightness ~ 126; village: R-B ~ 9, brightness ~ 113).
 
-    这里的修正只做一件事：在**已被判为建筑**的像素里，把同时满足
-        R - B > 阈值  且  亮度 > 阈值
-    的像素改成裸土。阈值来自本影像的实测统计（农田 R-B≈21、亮度≈126；
-    村庄 R-B≈9、亮度≈113），因此对村庄几乎没有误伤。
-
-    返回 ``(修正后的图, 被修改的像素数)``。这是一个**后处理补丁**，
-    根治办法是用本地样本微调模型。
+    Returns ``(mask, number_of_changed_pixels)``.
     """
     rgb = np.asarray(rgb, dtype=np.float32)
     if rgb.max() <= 1.5:

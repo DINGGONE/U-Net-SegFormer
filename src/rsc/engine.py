@@ -1,12 +1,4 @@
-"""训练引擎：AMP + 梯度累积 + poly/余弦调度 + 早停 + 逐 epoch 验证。
-
-针对 6GB 显存（RTX 2060/3060）的实用配置：
-    crop 512, batch 4, AMP on, grad_accum 2  → 等效 batch 8，稳定且不 OOM
-真的 OOM 了按这个顺序降配：crop 384 → batch 2/1 → 换轻量编码器（resnet34 / mit_b1）。
-
-验证不用 dataloader 直接喂整幅 1024 影像（6GB 会爆），而是复用推理侧的滑窗，
-保证"验证时的前向方式"和"上线推理"完全一致 —— 这是避免精度虚高的关键细节。
-"""
+"""Training and validation loops."""
 from __future__ import annotations
 
 import csv

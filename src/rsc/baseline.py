@@ -1,14 +1,4 @@
-"""传统方法基线：最小距离分类器（Minimum Distance Classifier）。
-
-为什么要写它：
-  1) 对比实验必须有"传统方法"这一栏，否则"深度学习好在哪"讲不清；
-  2) 它是几秒钟就能跑完的 smoke test —— 逻辑/metric/制图有 bug，先在这暴露；
-  3) 它天然支持"没 GPU 也能演示"，答辩现场不怕环境翻车。
-
-思路（教科书级监督分类）：每类在特征空间里算一个中心，像元归到最近的中心。
-特征除了 RGB 还加了 ExG（超绿指数）、亮度、饱和度 —— 这几个人造特征对
-"植被 vs 裸土"、"水体 vs 阴影"特别有效。
-"""
+"""Minimum-distance classifier baseline."""
 from __future__ import annotations
 
 from typing import Iterable, List, Optional, Sequence, Tuple

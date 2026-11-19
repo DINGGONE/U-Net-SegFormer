@@ -1,17 +1,7 @@
-"""从 HuggingFace 拉 LoveDA 的一个子集（多线程、可断点续跑）。
+"""Download a LoveDA subset from HuggingFace (parallel, resumable).
 
-为什么不用官方的 Zenodo 压缩包：
-  * 4.0 GB 单流下载，实测 0.6 MB/s，还要 100+ 分钟，而且 Zenodo 会限流（403）；
-  * HF 上镜像成了单张 PNG，可以**按需取子集**、**多线程并发**，1200 张图大约 15~25 分钟；
-  * 单张失败只需重下那一张，不会前功尽弃。
-
-数据来源：https://huggingface.co/datasets/chloechia/loveda
-它的标签是**偏移过的**（0=Ignore, 1=Background, 2=Building, 3=Road, 4=Water, 5=Barren,
-6=Forest, 7=Agricultural），本脚本已按 palette.LABEL_PRESETS["loveda_hf"] 转成本项目的 0~5+255。
-
-    python scripts/fetch_loveda_hf.py --n-train 1200 --n-val 400
-    python scripts/fetch_loveda_hf.py --n-train 200 --n-val 80 --out data/loveda_small
-"""
+Usage:
+    python scripts/fetch_loveda_hf.py --n-train 1000 --n-val 300"""
 from __future__ import annotations
 
 import argparse

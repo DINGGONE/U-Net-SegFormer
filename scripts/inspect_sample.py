@@ -1,10 +1,7 @@
-"""看一眼"样例数据"里到底是什么：影像 / 标签 / 放大局部 / 类别占比。
+"""Render a summary figure of the sample dataset.
 
-    python scripts/inspect_sample.py
-    python scripts/inspect_sample.py --tile data/sample/val/images/val_001.png
-
-输出 outputs/sample_inspect.png（4 联图），并打印这份数据的元信息。
-"""
+Usage:
+    python scripts/inspect_sample.py"""
 from __future__ import annotations
 
 import argparse

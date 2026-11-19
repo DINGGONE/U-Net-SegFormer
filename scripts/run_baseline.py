@@ -1,11 +1,7 @@
-"""跑通"裁剪 → 分类 → 评估 → 后处理 → 制图"全链路（无需 GPU / 无需 torch）。
+"""End-to-end pipeline with a minimum-distance classifier (no GPU).
 
-用途：在拿到 GPU、下完 LoveDA 之前，先用传统最小距离分类器把整条流水线走一遍，
-      确认数据、坐标、指标、配色、制图都正确；同时也是对比实验的传统方法基线。
-
-    python scripts/run_baseline.py
-    python scripts/run_baseline.py --data data/sample --out outputs --gsd 0.3
-"""
+Usage:
+    python scripts/run_baseline.py"""
 from __future__ import annotations
 
 import argparse

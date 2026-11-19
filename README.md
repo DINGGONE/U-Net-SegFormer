@@ -6,7 +6,7 @@
 > **PyTorch + U-Net / SegFormer + albumentations + OpenCV**，Windows / RTX 2060 6 GB 上完整可跑。
 
 <p align="center">
-  <img src="docs/images/result_compare.jpg" width="900">
+  <img src="figures/result_compare.jpg" width="900">
 </p>
 
 <p align="center">
@@ -23,7 +23,7 @@
 - [项目结构](#项目结构)
 - [方法](#方法)
 - [实验与结果](#实验与结果)
-- [已知局限（诚实版）](#已知局限诚实版)
+- [已知局限](#已知局限)
 - [复现命令](#复现命令)
 - [数据来源与许可](#数据来源与许可)
 - [引用](#引用)
@@ -76,13 +76,13 @@
 训练耗时 **42 分钟**（RTX 2060 6 GB），loss 1.93 → 0.46。
 
 <p align="center">
-  <img src="docs/images/curves.png" width="800">
+  <img src="figures/curves.png" width="800">
 </p>
 
 ### 2. 实测影像解译（116 公顷，0.5 m）
 
 <p align="center">
-  <img src="docs/images/result_poster.png" width="900">
+  <img src="figures/result_poster.png" width="900">
 </p>
 
 | 地类 | 面积 | 占比 |
@@ -97,7 +97,7 @@
 ### 3. 误差分析
 
 <p align="center">
-  <img src="docs/images/confusion.png" width="620">
+  <img src="figures/confusion.png" width="620">
 </p>
 
 经典混淆方向：**建筑 ↔ 道路**（灰屋顶 vs 沥青）、**裸土 ↔ 植被**（收割后的农田）。
@@ -127,8 +127,6 @@ python tests/test_smoke.py
 # 2) 生成样例数据 + 跑传统基线 + 出 3 张图（约 15 秒）
 python scripts/run_baseline.py
 ```
-
-或者直接双击根目录的 **`一键运行.bat`**，它会自动检查依赖、跑测试、出图。
 
 ### 用自己的影像训练
 
@@ -166,7 +164,6 @@ python scripts/predict.py --ckpt runs/loveda_r34/best.pt \
 .
 ├── README.md
 ├── requirements.txt
-├── 一键运行.bat                  # 新手双击入口
 ├── configs/                      # 3 套实验配置
 │   ├── loveda_unet_r34.yaml
 │   ├── loveda_segformer_b2.yaml
@@ -181,7 +178,6 @@ python scripts/predict.py --ckpt runs/loveda_r34/best.pt \
 │   ├── synth.py                  # 样例数据生成器
 │   ├── data.py / models.py / losses.py / engine.py / infer.py   # 深度学习部分
 ├── scripts/                      # 命令行入口
-│   ├── first_run.py              # 新手向导
 │   ├── make_sample_data.py       # 生成样例数据
 │   ├── run_baseline.py           # 传统基线 + 出图（无需 GPU）
 │   ├── unsupervised_baseline.py  # K-means 非监督（无标注应急）
@@ -195,14 +191,9 @@ python scripts/predict.py --ckpt runs/loveda_r34/best.pt \
 ├── gee/                          # Google Earth Engine 脚本
 │   ├── export_s2_patches.js      # Sentinel-2 瓦片导出
 │   └── sample_points.js          # 分层随机验证样点
-├── tests/test_smoke.py           # 10 个单测（无需 torch）
-└── docs/                         # 文档
-    ├── 00_新手一步步.md
-    ├── 01_数据与标注.md
-    ├── 02_实验设计.md
-    ├── 03_制图与GEE闭环.md
-    ├── 04_实施方案.md
-    └── images/
+├── figures/                      # README 引用的成果图
+├── data/sample/                  # 合成样例数据
+└── tests/test_smoke.py           # 10 个单测（无需 torch）
 ```
 
 ---
@@ -241,7 +232,7 @@ best.pt
 
 ## 实验与结果
 
-`docs/02_实验设计.md` 里有完整的对比实验矩阵（E0~D3）、消融设计和结果表模板。核心几张：
+下面是核心的几个实验结论。
 
 **主结果（LoveDA 6 类）**
 
@@ -253,7 +244,7 @@ best.pt
 | SegFormer | MiT-B2 | 27.4 M | 待跑 | `configs/loveda_segformer_b2.yaml` |
 | U-Net++ | ResNet50 | ~26 M | 待跑 | — |
 
-**消融要点**（详见 `docs/02`）
+**消融要点**
 
 - CE+Dice 比纯 CE 高 1~2 点，主要在建筑/裸土；
 - 类别权重 `freq^-0.5` 比 `1/freq` 稳，后者会让小类过曝成噪点；
@@ -272,7 +263,7 @@ best.pt
 
 ---
 
-## 已知局限（诚实版）
+## 已知局限
 
 1. **跨域会掉点**。LoveDA（0.3 m，长江中下游）训的模型直接跑北方村庄 0.5 m 影像，
    会把"收割后的裸田"大量误判成建筑（实测 30.9% → 加光谱修正降到 15.0%）。
@@ -345,22 +336,6 @@ python scripts/predict.py --ckpt runs/loveda_r34/best.pt --src data/raw/exp.tif 
   year      = {2021}
 }
 ```
-
----
-
-## 文档
-
-| 文档 | 内容 |
-|---|---|
-| [docs/00_新手一步步.md](docs/00_新手一步步.md) | 零基础照做即可：双击运行、看懂三张图、装 PyTorch、第一次训练、7 天节奏 |
-| [docs/01_数据与标注.md](docs/01_数据与标注.md) | 三个公开数据集的下载 / 标签映射 / 踩坑，**样点设计与精度评价口径** |
-| [docs/02_实验设计.md](docs/02_实验设计.md) | 对比实验矩阵、消融、指标口径、结果表模板、时间预算 |
-| [docs/03_制图与GEE闭环.md](docs/03_制图与GEE闭环.md) | 解译图规范、GEE 三种玩法、交付物与亮点话术 |
-| [docs/04_实施方案.md](docs/04_实施方案.md) | S0–S7 排期、验收标准、显存调参、常见坑清单 |
-| [docs/05_第一次上传GitHub.md](docs/05_第一次上传GitHub.md) | **第一次发 GitHub 的完整步骤**（图形界面 / 命令行两条路） |
-
-> 想把这个项目发到 GitHub？装好 Git 后双击根目录的 **`上传到GitHub.bat`**，会中文向导式帮你完成
-> 初始化、检查大文件、提交和推送。上传前可用 `python scripts/repo_size.py` 确认只传了 88 个文件 / 约 24.5 MB。
 
 ---
 

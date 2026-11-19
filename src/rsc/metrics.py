@@ -1,17 +1,4 @@
-"""分割精度评价：混淆矩阵 → OA / mIoU / mF1 / Kappa / 各类 IoU & F1。
-
-刻意用 numpy 实现（不依赖 torch），好处是：
-  1) 训练循环、独立评估脚本、后处理前后对比可以复用同一套口径；
-  2) 可以脱机单测，避免"指标算错但 loss 在降"这类最坑的 bug。
-
-用法::
-
-    cm = ConfusionMatrix(num_classes=6, ignore_index=255)
-    cm.update(pred_hw, gt_hw)          # 可多次累加（逐 batch / 逐瓦片）
-    cm.iou()          # (6,) 各类 IoU，nan 表示该类在 GT 中不存在
-    cm.f1()           # (6,)
-    cm.summary()      # dict，可直接 json.dump 存档
-"""
+"""Confusion matrix and segmentation metrics: mIoU / F1 / OA / Kappa."""
 from __future__ import annotations
 
 from typing import Dict, Optional, Sequence

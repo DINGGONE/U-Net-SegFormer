@@ -1,26 +1,7 @@
-"""下载 PyTorch 的 CUDA 版 wheel（支持断点续传），解决"国内下载 2.4 GB 老断"的问题。
+"""Resumable downloader for the CUDA build of PyTorch.
 
-背景：
-  * `pip install torch` 默认从 PyPI 装的是 **CPU 版**（约 200 MB），能跑但不吃显卡；
-  * 要吃显卡必须装 **CUDA 版**（2.4 GB），官方源 download.pytorch.org 在国内经常几十 KB/s；
-  * 阿里云镜像有完整 wheel，实测约 0.3 MB/s（2.4 GB 约 2 小时），但断了就得重来。
-
-所以这个脚本做了三件 pip 不做的事：
-  1. **断点续传**：断了重跑，从上次的字节位置继续（HTTP Range）；
-  2. **失败重试**：网络抖动自动重连，最多 50 次；
-  3. **进度可视**：实时显示 MB/s、已下载百分比、剩余时间。
-
-用法::
-
-    # 1) 下载（可以随时 Ctrl+C，下次重跑会接着下）
-    python scripts/get_torch_cuda.py
-
-    # 2) 下完自动安装
-    python scripts/get_torch_cuda.py --install
-
-    # 3) 换个镜像 / 换个版本
-    python scripts/get_torch_cuda.py --mirror https://mirror.sjtu.edu.cn/pytorch-wheels --cu 121
-"""
+Usage:
+    python scripts/get_torch_cuda.py --install"""
 from __future__ import annotations
 
 import argparse

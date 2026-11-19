@@ -1,12 +1,4 @@
-"""模型构建：U-Net 系列（segmentation_models_pytorch）+ SegFormer。
-
-为什么要两个：
-  * U-Net + ResNet/EfficientNet 编码器：小数据也能训，边界准，是可靠的下限；
-  * SegFormer（MiT 主干 + 轻量 MLP 解码头）：Transformer 的全局感受野对
-    "大面积同类地物"（农田、水面、连片屋顶）更稳，是论文里的 SOTA 对照。
-
-两个模型对外接口完全一致：``forward(x) -> logits(B, C, H, W)``，训练代码不必关心用的是谁。
-"""
+"""Model factory: U-Net family (smp) and SegFormer."""
 from __future__ import annotations
 
 from typing import Optional

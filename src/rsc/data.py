@@ -1,19 +1,4 @@
-"""数据集与增强（albumentations）。
-
-统一的数据约定（所有数据集都先转成这个结构，训练代码就永远不用改）::
-
-    <root>/<split>/images/*.png    3 通道 8bit
-    <root>/<split>/masks/*.png     单通道 8bit，值 0..5，255=忽略
-
-LoveDA 原始结构用 ``scripts/prepare_loveda.py`` 一键转过来；
-ISPRS/SpaceNet/GEE 导出的 GeoTIFF 用 ``scripts/cut_geotiff.py`` 裁成这个结构。
-
-增强策略要点（遥感分割的"有效增强"和 CV 那套不太一样）：
-  * 旋转/翻转必须做满 D4（90° 倍数）—— 航拍影像没有"上"；
-  * 任意角度旋转要节制，会把建筑变成斜屋顶，反而不像真实数据；
-  * 颜色类增强（亮度/对比度/色调）要强，因为不同时相、不同传感器差异巨大；
-  * 少用 Cutout/MixUp —— 高分影像里被挖掉的区域会变成"假地物"，标签对不上。
-"""
+"""Dataset and augmentation pipelines (albumentations)."""
 from __future__ import annotations
 
 import os

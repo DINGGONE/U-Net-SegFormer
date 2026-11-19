@@ -1,12 +1,7 @@
-"""训练入口。
+"""Train a segmentation model.
 
-    # 1) 先确认环境能跑（用样例数据，1 epoch 出结果）
-    python scripts/train.py --config configs/loveda_unet_r34.yaml --data data/sample ^
-        --preset raw --epochs 2 --out runs/smoke
-
-    # 2) 正式训练
-    python scripts/train.py --config configs/loveda_unet_r34.yaml --data data/loveda
-"""
+Usage:
+    python scripts/train.py --config configs/loveda_unet_r34.yaml --data data/loveda --preset raw"""
 from __future__ import annotations
 
 import argparse

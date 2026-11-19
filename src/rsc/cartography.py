@@ -1,16 +1,4 @@
-"""制图：把分割结果做成一张能进报告/答辩的"区域土地利用智能解译图"。
-
-这一层是"算法 + 行业应用"闭环的出口。评审/甲方看的不是 mIoU，而是
-"这张图能不能读、有没有图例、有没有面积统计、比例尺对不对"。
-
-包含 4 个成品图函数：
-    landcover_poster     区域土地利用智能解译图（主成果图，含图例/面积统计/精度）
-    comparison_figure    "影像 | 真值 | 预测" 三联图（论文/答辩常用）
-    confusion_figure     混淆矩阵热力图（误差分析）
-    history_figure       训练曲线（loss / mIoU），用于说明收敛性
-
-依赖 matplotlib + numpy，不依赖 cv2/rasterio，任何环境都能出图。
-"""
+"""Map production: legend, scale bar, north arrow, survey poster."""
 from __future__ import annotations
 
 from pathlib import Path

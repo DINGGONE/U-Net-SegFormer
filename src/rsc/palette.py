@@ -1,10 +1,4 @@
-"""类别体系与配色：全项目唯一真源（single source of truth）。
-
-所有数据集的原生标签都通过 ``LABEL_PRESETS`` 映射到本项目的 6 类体系，
-这样模型、指标、制图不必关心底层用的是 LoveDA 还是 Vaihingen。
-
-    0 背景/其他   1 建筑   2 道路   3 水体   4 植被   5 裸土   255 忽略
-"""
+"""Class scheme and colour palette (single source of truth)."""
 from __future__ import annotations
 
 from dataclasses import dataclass

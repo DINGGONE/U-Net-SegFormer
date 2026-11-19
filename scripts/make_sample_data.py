@@ -1,17 +1,7 @@
-"""生成样例数据集（秒级可复现），并抽样验证点。
+"""Generate the synthetic sample dataset.
 
-产出::
-
-    data/sample/
-      train/images/*.png  train/masks/*.png    训练瓦片
-      val/images/*.png    val/masks/*.png      验证瓦片
-      scene/scene_rgb.png scene_mask.png       模拟"整幅区域影像"（滑窗推理用）
-      sample_points.csv                        分层随机抽样验证点
-      classes.json                             类别/配色元数据
-
-真实数据替换：把 LoveDA 解压后按同样结构放好即可（脚本 scripts/prepare_loveda.py 会做），
-也可以用 ``--from-loveda`` 直接指向原始目录。
-"""
+Usage:
+    python scripts/make_sample_data.py"""
 from __future__ import annotations
 
 import argparse

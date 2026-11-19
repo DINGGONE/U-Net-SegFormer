@@ -1,13 +1,4 @@
-"""大图切片与滑窗（overlap-tile）推理拼接。
-
-高分影像动辄上万像素，不可能整幅送进网络。标准做法是 overlap-tile：
-    1) 按 patch 滑窗取块，块间留 overlap（这里默认 1/4 patch）；
-    2) 每块预测得到概率图，乘一个中心高、边缘低的权重窗（Hann）；
-    3) 累加加权概率 / 累加权重，再取 argmax —— 这样能消除拼接缝。
-
-纯 numpy 实现，不依赖 torch，train/infer 两侧共用同一套坐标逻辑，
-避免"训练时裁的块和推理时裁的块对不上"的经典事故。
-"""
+"""Patch tiling and overlap-tile inference with weighted stitching."""
 from __future__ import annotations
 
 from typing import Callable, Iterator, List, Optional, Tuple

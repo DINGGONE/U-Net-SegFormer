@@ -1,11 +1,7 @@
-"""把样例 PNG 包成一份带坐标系/分辨率的 GeoTIFF，用来测试"自己的影像"整条流程。
+"""Wrap the sample scene into a GeoTIFF with CRS for pipeline tests.
 
-真实场景里你用不到它；它的作用是让你在手头还没有真实影像时，
-也能先把 GeoTIFF → 滑窗推理 → 保留坐标 → 成果图 这条链路验证一遍。
-
-    python scripts/make_test_geotiff.py
-    python scripts/make_test_geotiff.py --src data/sample/scene/scene_rgb.png --out outputs/test_area.tif
-"""
+Usage:
+    python scripts/make_test_geotiff.py"""
 from __future__ import annotations
 
 import argparse

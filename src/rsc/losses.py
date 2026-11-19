@@ -1,13 +1,4 @@
-"""损失函数：CE / Dice / Focal / 组合损失。
-
-经验结论（遥感 6 类分割）：
-  * 纯 CE：收敛稳，但小类（建筑、裸土）IoU 上不去；
-  * 纯 Dice：小类好，早期梯度不稳，容易训崩；
-  * CE + Dice（权重 1:1）+ 类别权重：最稳的组合，建议作为默认；
-  * Focal：标签有噪声时有用，但会压低 recall，慎用。
-
-所有 loss 都支持 ``ignore_index=255``（边界/阴影未标注区）。
-"""
+"""Segmentation losses: CE / Dice / Focal and combinations."""
 from __future__ import annotations
 
 from typing import Optional

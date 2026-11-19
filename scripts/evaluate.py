@@ -1,13 +1,7 @@
-"""独立评估：混淆矩阵 + 指标表 + 混淆矩阵图 +（可选）验证样点核查。
+"""Evaluate a checkpoint: confusion matrix, metrics, optional sample points.
 
-    python scripts/evaluate.py --ckpt runs/loveda_unet_r34/best.pt --data data/loveda
-    python scripts/evaluate.py --ckpt ... --data data/sample --preset raw ^
-        --points data/sample/sample_points.csv
-
-两种口径都给，答辩时很有用：
-  * 逐像元（pixel-wise）：mIoU / OA，训练时就在看；
-  * 样点法（point-based）：行业验收常用，每个点能落到经纬度，便于野外核查。
-"""
+Usage:
+    python scripts/evaluate.py --ckpt runs/loveda_r34/best.pt --data data/loveda"""
 from __future__ import annotations
 
 import argparse

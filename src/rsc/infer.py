@@ -1,10 +1,4 @@
-"""推理：单幅影像 / 大 GeoTIFF 的滑窗预测，结果落盘为 GeoTIFF + 彩色 PNG。
-
-关键点：
-  * 训练用 ImageNet 归一化，推理必须完全一致（``MEAN/STD`` 统一在这里定义）；
-  * 大图不能整幅送 GPU，统一走 ``tiling.sliding_window_predict``（Hann 加权拼接）；
-  * GeoTIFF 输出保留原 CRS / transform，这样结果能直接拖进 ArcGIS/QGIS 叠图。
-"""
+"""Inference: sliding-window prediction and GeoTIFF output."""
 from __future__ import annotations
 
 import json

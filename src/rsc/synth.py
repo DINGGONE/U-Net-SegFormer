@@ -1,15 +1,4 @@
-"""生成"样例数据"：结构与 LoveDA / Vaihingen 完全一致的合成高分影像瓦片。
-
-为什么要有它：
-  * 真实数据集动辄十几个 GB，网络/磁盘没准备好时，先用它把"裁剪→训练→评估→制图"
-    整条链路跑通，代码 bug 当场暴露，不用等数据下完；
-  * 单测、CI、答辩演示都需要一份秒级可复现的数据；
-  * 类别分布、标签取值、影像尺寸都按 LoveDA 的规范来（1024×1024 RGB + 单通道标签 0~6），
-    换成真实数据只需把路径指过去，一行都不用改。
-
-注意：合成数据**没有**真实地物的光谱纹理，指标只能用来验证"流程是否正确"，
-不能写进论文当实验结果。真实精度必须用 LoveDA / Vaihingen 的 test 或 val 跑。
-"""
+"""Synthetic sample data generator (pipeline smoke tests only)."""
 from __future__ import annotations
 
 import json

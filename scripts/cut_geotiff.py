@@ -1,19 +1,7 @@
-"""大 GeoTIFF 裁剪：整幅正射影像 → 训练瓦片（影像 + 标签）。
+"""Cut a large GeoTIFF into training tiles.
 
-这是"影像裁剪"环节的通用工具，三个数据源都能用：
-  * ISPRS Vaihingen/Potsdam 的单幅大图 + 标签图；
-  * SpaceNet 的 AOI GeoTIFF + building footprint（先栅格化成标签）；
-  * GEE 导出的 Sentinel-2/高分瓦片（无标签，用 --label 省略，只切影像用于推理）。
-
-用法::
-
-    # 有标签：切成训练集
-    python scripts/cut_geotiff.py --src vaihingen_area15.tif --label vaihingen_area15_label.tif ^
-        --out data/vaihingen/train --size 512 --stride 256 --preset vaihingen
-
-    # 无标签：切成推理用的影像块
-    python scripts/cut_geotiff.py --src s2_mosaic.tif --out data/infer_tiles --size 512
-"""
+Usage:
+    python scripts/cut_geotiff.py --src a.tif --label a_label.tif --out data/x/train --size 512 --stride 256"""
 from __future__ import annotations
 
 import argparse

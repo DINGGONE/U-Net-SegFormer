@@ -1,21 +1,7 @@
-"""把 LoveDA 官方压缩包解压后的目录，整理成本项目的标准结构。
+"""Convert the official LoveDA layout into this project's layout.
 
-LoveDA 官方结构::
-
-    LoveDA/
-      Train/{Urban,Rural}/images_png/*.png  masks_png/*.png
-      Val/{Urban,Rural}/...
-      Test/{Urban,Rural}/images_png/*.png
-
-转换后::
-
-    data/loveda/train/images/*.png  masks/*.png   (标签已映射到 0..5, 255=忽略)
-    data/loveda/val/images/*.png    masks/*.png
-
-用法::
-
-    python scripts/prepare_loveda.py --src D:\\data\\LoveDA --dst data/loveda
-"""
+Usage:
+    python scripts/prepare_loveda.py --src D:/data/LoveDA --dst data/loveda"""
 from __future__ import annotations
 
 import argparse
