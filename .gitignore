@@ -36,14 +36,8 @@ wheels/
 *.aux.xml
 *.tfw
 
-# 输出目录：只保留 README / 文档里引用的几张演示图
-outputs/*
-!outputs/demo_comparison.png
-!outputs/demo_confusion.png
-!outputs/demo_landcover_map.png
-!outputs/demo_landcover_map.pdf
-!outputs/metrics_baseline.json
-!outputs/sample_inspect.png
+# 输出目录
+outputs/
 
 # 编辑器 / 系统
 .idea/
