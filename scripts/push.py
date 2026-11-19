@@ -1,13 +1,18 @@
-"""Push the repository to GitHub, with retries and clear diagnostics.
+"""Push the repository to GitHub (HTTPS with retries, SSH fallback).
 
 Usage:
-    python scripts/push.py                  # add + commit + push
-    python scripts/push.py --force          # force push (remote only has a partial upload)
-    python scripts/push.py --remote URL     # set/override the remote first
+    python scripts/push.py                 # add + commit + push over HTTPS, then try SSH
+    python scripts/push.py --https         # HTTPS only
+    python scripts/push.py --ssh           # SSH only
+    python scripts/push.py --force         # force push (remote has a partial web upload)
+    python scripts/push.py --remote URL    # set the remote first
 """
 from __future__ import annotations
 
 import argparse
+import os
+import re
+import shutil
 import subprocess
 import sys
 import time
@@ -22,18 +27,131 @@ GIT_CANDIDATES = (
     r"C:\Program Files\Git\cmd\git.exe",
     r"C:\Program Files (x86)\Git\cmd\git.exe",
 )
+SSH_DIR = Path.home() / ".ssh"
+KEY = SSH_DIR / "id_ed25519"
 
 
-def git(*args: str, check: bool = False) -> tuple[int, str]:
+def sh(args, cwd=None, timeout=120) -> tuple[int, str]:
+    try:
+        p = subprocess.run(args, cwd=str(cwd or ROOT), text=True, encoding="utf-8",
+                           errors="replace", stdout=subprocess.PIPE,
+                           stderr=subprocess.STDOUT, timeout=timeout)
+        return p.returncode, (p.stdout or "").strip()
+    except FileNotFoundError:
+        return 127, "not found"
+    except subprocess.TimeoutExpired:
+        return 124, "timeout"
+
+
+def git(*args, timeout=180) -> tuple[int, str]:
     for exe in GIT_CANDIDATES:
-        try:
-            p = subprocess.run([exe, *args], cwd=str(ROOT), text=True, encoding="utf-8",
-                               errors="replace", stdout=subprocess.PIPE,
-                               stderr=subprocess.STDOUT)
-            return p.returncode, p.stdout or ""
-        except FileNotFoundError:
-            continue
+        if shutil.which(exe) or Path(exe).exists():
+            rc, out = sh([exe, *args], timeout=timeout)
+            if rc != 127:
+                return rc, out
     return 127, "git not found"
+
+
+def git_dir() -> Path | None:
+    for exe in GIT_CANDIDATES:
+        if Path(exe).exists():
+            return Path(exe).parent.parent
+        found = shutil.which(exe)
+        if found:
+            return Path(found).parent.parent
+    return None
+
+
+def to_ssh_url(url: str) -> str:
+    m = re.match(r"https://github\.com/([^/]+)/([^/]+?)(?:\.git)?/?$", url.strip())
+    return f"git@{'github.com'}:{m.group(1)}/{m.group(2)}.git" if m else url
+
+
+def net_error(out: str) -> bool:
+    low = out.lower()
+    return any(k in low for k in ("connection was reset", "could not connect",
+                                  "failed to connect", "timed out", "recv failure"))
+
+
+def push(force: bool, retries: int, label: str) -> tuple[bool, str]:
+    args = ["push", "-u", "origin", "HEAD:main"]
+    if force:
+        args.insert(1, "--force")
+    out = ""
+    for i in range(1, retries + 1):
+        print(f"\n  {label} 推送第 {i}/{retries} 次 ...")
+        rc, out = git(*args, timeout=600)
+        if rc == 0:
+            return True, out
+        for line in out.splitlines()[-2:]:
+            print("    " + line)
+        if not net_error(out) or i == retries:
+            break
+        wait = 4 * i
+        print(f"    连接被重置，{wait} 秒后重试 ...")
+        time.sleep(wait)
+    return False, out
+
+
+def ssh_setup_and_push(url: str, force: bool) -> bool:
+    gd = git_dir()
+    if gd is None:
+        print("  [X] 找不到 Git 安装目录，无法使用 SSH")
+        return False
+    ssh = gd / "usr" / "bin" / "ssh.exe"
+    keygen = gd / "usr" / "bin" / "ssh-keygen.exe"
+
+    print("\n" + "-" * 58)
+    print("  改用 SSH 方式（HTTPS 被重置时通常能通）")
+    print("-" * 58)
+
+    if not KEY.exists():
+        print("  1) 生成本机 SSH 密钥 ...")
+        SSH_DIR.mkdir(parents=True, exist_ok=True)
+        rc, out = sh([str(keygen), "-t", "ed25519", "-C", "github", "-f", str(KEY), "-N", ""])
+        if rc not in (0, 1):
+            print("  [X] 生成密钥失败：", out[:200])
+            return False
+        print("     已生成", KEY)
+    else:
+        print("  1) 已有 SSH 密钥", KEY)
+
+    pub = Path(str(KEY) + ".pub").read_text(encoding="utf-8").strip()
+    try:
+        subprocess.run("clip", input=pub, text=True, check=False)
+        print("  2) 公钥已复制到剪贴板")
+    except Exception:
+        print("  2) 请手动复制下面的公钥：\n")
+    if not shutil.which("clip"):
+        print("     " + pub)
+
+    print("\n  3) 接下来需要把公钥加到 GitHub（只需一次）：")
+    print("     · 浏览器已打开页面，点 New SSH key")
+    print("     · Title 随便填（如 my-pc），Key 里 Ctrl+V 粘贴")
+    print("     · 点 Add SSH key")
+    try:
+        os.startfile("https://github.com/settings/keys")
+    except Exception:
+        print("     打开：https://github.com/settings/keys")
+    try:
+        input("\n  粘贴完成后，按回车继续 ...")
+    except EOFError:
+        pass
+
+    ssh_url = to_ssh_url(url)
+    git("remote", "set-url", "origin", ssh_url)
+    print(f"  4) 远端已切换为 {ssh_url}")
+
+    print("  5) 测试 SSH 连接 ...")
+    rc, out = sh([str(ssh), "-T", "-o", "StrictHostKeyChecking=accept-new",
+                  "-o", "BatchMode=yes", "git@github.com"], timeout=30)
+    ok = "successfully authenticated" in (out or "").lower()
+    print("     " + (out.splitlines()[0] if out else "(无输出)"))
+    if not ok:
+        print("  [!] SSH 认证未通过，可能是公钥还没加到 GitHub，或粘贴错了。")
+        return False
+
+    return push(force, 1, "SSH")[0]
 
 
 def main() -> int:
@@ -41,6 +159,8 @@ def main() -> int:
     ap.add_argument("--remote", default=None)
     ap.add_argument("--force", action="store_true")
     ap.add_argument("--retries", type=int, default=3)
+    ap.add_argument("--https", action="store_true", help="只走 HTTPS")
+    ap.add_argument("--ssh", action="store_true", help="只走 SSH")
     args = ap.parse_args()
 
     print("=" * 58)
@@ -51,83 +171,59 @@ def main() -> int:
     if rc != 0:
         print("  [X] 没有找到 Git。先装：https://git-scm.com/download/win")
         return 1
-    print(f"  {ver.strip()}")
+    print(f"  {ver}")
 
     if args.remote:
         git("remote", "remove", "origin")
         git("remote", "add", "origin", args.remote)
-        print(f"  远端已设为 {args.remote}")
+        print(f"  远端设为 {args.remote}")
 
     rc, url = git("remote", "get-url", "origin")
     if rc != 0:
-        print("  [X] 还没有关联远端仓库。先运行：")
-        print('      python scripts/push.py --remote https://github.com/用户名/仓库名.git')
+        print("  [X] 还没有远端。先指定：")
+        print('      python scripts/push.py --remote https://github.com/用户名/仓库.git')
         return 1
-    print(f"  远端：{url.strip()}")
+    url = url.strip()
+    print(f"  远端：{url}")
 
-    # ---- 暂存与提交 ----
     git("add", "-A")
     rc, out = git("commit", "-m", "update: 同步本地改动")
     if rc == 0:
         print("  已提交本地改动")
     elif "nothing to commit" in out or "无文件要提交" in out:
-        print("  没有新改动，直接推送")
+        print("  没有新改动")
     else:
-        print("  [!] 提交失败：")
-        print("  " + out.strip()[:400])
-        print('      先设置身份：git config user.name "名字" / user.email "邮箱"')
+        print("  [!] 提交失败：" + out[:300])
+        print('      先设置：git config user.name "名字" / user.email "邮箱"')
         return 1
 
-    # ---- 推送（带重试）----
-    push_args = ["push", "-u", "origin", "HEAD:main"]
-    if args.force:
-        push_args.insert(1, "--force")
+    ok = False
+    if not args.ssh:
+        ok, out = push(args.force, args.retries, "HTTPS")
+    if ok:
+        print("\n" + "=" * 58)
+        print("  [OK] 上传成功")
+        print("  " + url.replace(".git", ""))
+        print("=" * 58)
+        return 0
 
-    for i in range(1, args.retries + 1):
-        print(f"\n  推送中（第 {i}/{args.retries} 次）...")
-        rc, out = git(*push_args)
-        if rc == 0:
-            print("\n" + "=" * 58)
-            print("  [OK] 上传成功")
-            print(f"  {url.strip().replace('.git', '')}")
-            print("=" * 58)
-            return 0
-        tail = out.strip().splitlines()[-3:]
-        for t in tail:
-            print("    " + t)
+    if args.https:
+        print("\n  HTTPS 推送失败。网络原因，可改用：python scripts/push.py --ssh")
+        return 1
 
-        low = out.lower()
-        net = ("connection was reset" in low or "could not connect" in low
-               or "timed out" in low or "recv failure" in low or "failed to connect" in low)
-        if net and i < args.retries:
-            wait = 5 * i
-            print(f"    网络问题，{wait} 秒后重试...")
-            time.sleep(wait)
-        elif not net:
-            break
+    print("\n  HTTPS 走不通（连接被重置），自动切换到 SSH ...")
+    if ssh_setup_and_push(url, args.force):
+        print("\n" + "=" * 58)
+        print("  [OK] 上传成功（SSH）")
+        print("  " + url.replace(".git", ""))
+        print("=" * 58)
+        return 0
 
-    # ---- 失败诊断 ----
     print("\n" + "-" * 58)
-    print("  推送失败。按报错对照：")
-    low = out.lower()
-    if "connection was reset" in low or "could not connect" in low or "timed out" in low:
-        print("  → GitHub 连不上（国内常见），不是你配置错。三条路：")
-        print("    1) 有代理：git config --global http.proxy http://127.0.0.1:7890 后重跑本脚本")
-        print("    2) 推到 Gitee，再用 GitHub 的 Import repository 导入：")
-        print("       git remote add gitee https://gitee.com/你的名/rs-landcover.git")
-        print("       git push -u gitee main")
-        print("    3) 继续用网页拖拽上传（缺点：没有提交历史）")
-    elif "rejected" in low or "non-fast-forward" in low:
-        print("  → 远端已有网页提交，和本地历史不一致。用强制推送覆盖：")
-        print("       python scripts/push.py --force")
-    elif "could not read username" in low or "terminal prompts disabled" in low or "prompt script" in low:
-        print("  → 需要登录授权，但当前窗口弹不出登录框。")
-        print("     · 请直接双击根目录的 一键上传.bat（在你自己电脑的窗口里跑，才能弹出浏览器登录）")
-        print("     · 或者先配好令牌：git config --global credential.helper manager")
-    elif "authentication" in low or "403" in low:
-        print("  → 认证失败：密码处要填 Personal Access Token（Settings > Developer settings > Tokens，勾 repo）")
-    else:
-        print("  → 把上面的原始报错整段复制下来排查")
+    print("  两条路都没通。最后两个办法：")
+    print("  1) 推到 Gitee，再用 GitHub 的 Import repository 导入：")
+    print("     python scripts/push.py --remote https://gitee.com/你的名/rs-landcover.git --force")
+    print("  2) 继续用网页拖拽上传（没有提交历史）")
     return 1
 
 
