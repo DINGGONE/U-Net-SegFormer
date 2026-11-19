@@ -200,6 +200,69 @@ git push
 
 ---
 
+# 网络不通怎么办（GitHub 连不上时）
+
+症状：`git push` 报
+
+```
+Failed to connect to github.com:443 after 21085 ms: Could not connect to server
+Recv failure: Connection was reset
+RPC failed; curl 56
+```
+
+**这不是你配置错了**，是国内直连 GitHub 的常见情况。三条路，按推荐顺序：
+
+## 方案 1：网页拖拽上传（最快，5 分钟）
+
+只要**浏览器能打开 GitHub** 就能用。
+
+1. 浏览器打开你的仓库 `https://github.com/你的用户名/仓库名`
+2. 点 **Add file → Upload files**
+3. 打开资源管理器，进入 `rs-landcover` 文件夹，**全选里面的文件和文件夹**（Ctrl+A），拖进网页虚线框
+   - 注意：不要拖 `data\loveda`、`runs`、`wheels`、`.torch`、`data\raw`（这些不该上传）
+   - 网页单次最多 100 个文件、单文件 25 MB；本项目 88 个文件 / 24.5 MB，正好能一次传完
+4. 下方 Commit changes 里填说明，点 **Commit changes**
+
+> 缺点：没有提交历史（只有一个 commit）。适合"先传上去再说"。
+
+## 方案 2：Gitee 中转 + GitHub 导入（最稳，保留完整历史）
+
+1. 注册 <https://gitee.com>，新建仓库 `rs-landcover`（不要初始化）
+2. 本地加一个 gitee 远端并推送：
+
+```bat
+git remote add gitee https://gitee.com/你的用户名/rs-landcover.git
+git push -u gitee main
+```
+
+3. 回到 GitHub → **New repository** → 页面底部点 **Import a repository**
+4. 填 Gitee 仓库地址 `https://gitee.com/你的用户名/rs-landcover.git` → **Begin import**
+
+GitHub 的服务器会自己去 Gitee 拉代码（不经过你的网络），1~2 分钟完成，提交历史完整保留。
+
+## 方案 3：有代理就用代理
+
+如果你装了 Clash / V2Ray（常见本地端口 7890）：
+
+```bat
+git config --global http.proxy http://127.0.0.1:7890
+git config --global https.proxy http://127.0.0.1:7890
+git push -u origin main
+```
+
+推送成功后可移除：`git config --global --unset http.proxy`
+
+## 顺带一条：改仓库名
+
+如果建仓库时名字被自动生成成了 `-U-Net-SegFormer-` 这种带横杠的怪名字，
+去 **Settings → Repository name** 改成 `rs-landcover`，然后本地更新远端地址：
+
+```bat
+git remote set-url origin https://github.com/你的用户名/rs-landcover.git
+```
+
+---
+
 # 关于大文件
 
 **永远不要** `git add` 数据集和模型权重。三种正确做法：
