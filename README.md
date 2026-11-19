@@ -3,7 +3,7 @@
 > 输入一幅高分影像，输出像素级 6 类地物（建筑 / 道路 / 水体 / 植被 / 裸土 / 其他），
 > 并加工成一张可直接进报告的 **区域土地利用智能解译图**。
 >
-> **PyTorch + U-Net / SegFormer + albumentations + OpenCV**，Windows / RTX 2060 6 GB 上完整可跑。
+> **技术栈：PyTorch + U-Net + albumentations + OpenCV**
 
 <p align="center">
   <img src="figures/result_compare.jpg" width="900">
@@ -47,7 +47,7 @@
 | 制图 | `src/rsc/cartography.py` | 解译图 / 三联对比图 / 混淆矩阵 / 训练曲线，全部自动出图 |
 | 传统基线 | `src/rsc/baseline.py` + `scripts/unsupervised_baseline.py` | 最小距离分类、K-means 非监督分类，用于对比与应急 |
 
-**五个工程细节**，是这类项目最容易翻车的地方，本仓库都处理了：
+本仓库处理了**五个工程细节**：
 
 1. **标签映射唯一真源** —— LoveDA 是 0~6（4=barren、5/6=植被），ISPRA/Vaihingen 是 0~5（0=不透水面），
    HuggingFace 版 LoveDA 还整体右移一位。全部走 `palette.LABEL_PRESETS`，改一处即可接新数据。
@@ -107,7 +107,7 @@
 
 ## 快速开始
 
-### 环境（已验证组合）
+### 环境配置
 
 ```bash
 # Python 3.9 + CUDA 12.1
@@ -117,8 +117,6 @@ pip install -r requirements.txt
 
 > Windows 上直接 `pip install torch` 装到的是 **CPU 版**（`torch.version.cuda is None`）。
 > 需要显卡必须显式指定 CUDA 源，或用 `scripts/get_torch_cuda.py` 走国内镜像断点续传（2.3 GB，约 20 分钟）。
-
-### 30 秒看效果（不需要 GPU、不需要数据集）
 
 ```bash
 # 1) 自检：10 个单测
@@ -221,12 +219,12 @@ best.pt
    └─ cartography：面积统计 + 解译成果图（图例/比例尺/指北针/精度卡）
 ```
 
-**增强策略**（遥感 ≠ 普通 CV）：
+**增强策略**：
 
-- 旋转/翻转必须做满 D4 —— 航拍影像没有"上"；
-- 任意角度旋转要节制，会把建筑转成斜屋顶，反而不像真实数据；
-- 颜色类增强要强（不同时相、不同传感器差异巨大）；
-- 少用 Cutout/MixUp —— 挖掉的区域会变成"假地物"，标签对不上。
+- 旋转/翻转必须做满 D4 ；
+- 任意角度旋转要节制；
+- 颜色类增强要强；
+- 少用 Cutout/MixUp 。
 
 ---
 
@@ -241,8 +239,6 @@ best.pt
 | MinDistance（传统基线） | — | — | ~0.35 | 几秒出结果，建筑 IoU 明显低 |
 | K-means（非监督） | — | — | 无精度 | 无标注应急 |
 | **U-Net** | ResNet34 | 24.4 M | **0.695** | 本仓库实测 |
-| SegFormer | MiT-B2 | 27.4 M | 待跑 | `configs/loveda_segformer_b2.yaml` |
-| U-Net++ | ResNet50 | ~26 M | 待跑 | — |
 
 **消融要点**
 
@@ -260,18 +256,6 @@ best.pt
 | 512 | 12 | 2.95 GB | 吞吐最高 |
 | 768 | 4 | 2.44 GB | 大上下文 |
 | 1024 | 2 | 2.22 GB | 整幅瓦片 |
-
----
-
-## 已知局限
-
-1. **跨域会掉点**。LoveDA（0.3 m，长江中下游）训的模型直接跑北方村庄 0.5 m 影像，
-   会把"收割后的裸田"大量误判成建筑（实测 30.9% → 加光谱修正降到 15.0%）。
-   根治要靠 **50~100 个本地图斑微调**，`--fix-fields` 只是补丁。
-2. **裸土类最弱**（IoU 0.387）。LoveDA 的 barren 定义模糊、样本少，这是数据集问题不是代码问题。
-3. **道路偏宽**。LoveDA 的 road 含路肩/人行道，映射到本项目后会比真实路面宽。
-4. **道路与建筑混淆**是这类任务的通病（灰屋顶 vs 沥青），需要 DSM/nDSM 或多时相才能根治。
-5. **没有真值的影像算不出精度**。仓库里所有 mIoU 都是 LoveDA 验证集的口径，不能直接搬到别人的影像上。
 
 ---
 
